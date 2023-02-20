@@ -63,9 +63,8 @@ class LanguageModel(object):
         """
         words = sent.split()
         ngrams = []
-        for i in range(len(words)-n+1):
-            # TODO (Task 1): construct a ngram tuple with the first element being words[i]
-            ngram = None # replace None
+        for i in range(len(words) - n + 1):
+            ngram = tuple(words[i:i + n])
             ngrams.append(ngram)
         return ngrams
 
@@ -113,16 +112,20 @@ class LanguageModel(object):
                 if self.N == 1:
                     # Unigram LMs are treated separately.
                     if self.add_k <= 0:
-                        # We provide the reference code for unigram LMs without smoothing.
+                        # Unigram LMs without smoothing.
                         log_prob += math.log2(self.train_ngram_freq[ngram] / self.word_cnt)
                     else:
-                        # TODO (Task 2): compute the log probability when using add-k smoothing.
+                        # Log probability of unigram LMs with smoothing
                         # Recall that p(x_j) = (cnt(x_j)+k) / (word_cnt + k*|V|) 
-                        pass
+                        numer = self.train_ngram_freq[ngram] + self.add_k
+                        denom = self.word_cnt + self.add_k * self.vocab_size
+                        log_prob += math.log2(numer / denom)
                 else:
                     # TODO (Task 2): compute the log probability for n-gram models (n>=2).
                     # For add-k smoothing, we have p(x_j|x_i,...,x_{j-1}) = (cnt((x_i, ..., x_j))+k) / (cnt((x_i, ..., x_{j-1})) + k*|V|) 
-                    pass
+                    numer = self.train_ngram_freq[ngram] + self.add_k
+                    denom = self.word_cnt + self.add_k * self.vocab_size
+                    log_prob += math.log2(numer / denom)
             else:
                 # Case 2: this ngram does not appear in the training data.
                 if self.add_k <= 0:
@@ -135,8 +138,7 @@ class LanguageModel(object):
                         log_prob += math.log2(self.add_k/(self.add_k*self.vocab_size + n_minus_one_gram_freq) )
                     
         cnt_ngrams = len(sent_ngrams)
-        # TODO (Task 2): compute sentence-level perplexity
-        perplexity = None # replace None
+        perplexity = math.e ** (-log_prob / cnt_ngrams)
         return perplexity, log_prob, cnt_ngrams
 
     def corpus_perplexity(self, corpus):
@@ -158,7 +160,7 @@ class LanguageModel(object):
             corpus_cnt_ngrams += sent_cnt_ngrams
         # TODO (Task 2): compute corpus-level perplexity. The equation should be almost the same to 
         # sentence-level perplexity.
-        perplexity = None # replace None
+        perplexity = math.e ** (-corpus_log_prob / corpus_cnt_ngrams)
         return perplexity
         
     def greedy_search(self, max_steps=50):
@@ -186,7 +188,7 @@ class LanguageModel(object):
                     ngram = tuple(words[-self.N+1:] + [word])
                 # TODO (Task 3): given the n-gram, we retrieve its frequency in the training data.
                 # We update {next_word} and {next_max_freq} under certain conditions.
-                pass
+                # print(ngram)
             if next_word is None:
                 break
             words.append(next_word) 
