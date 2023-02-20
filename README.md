@@ -5,6 +5,19 @@ An n-gram model is a type of probabilistic language model for predicting the nex
 ## Add-K Smoothing
 Add-1 smoothing (also called as Laplace smoothing) is a simple smoothing technique that Add 1 to the count of all n-grams in the training set before normalizing into probabilities. Add-k smoothing is an extension of Laplace smoothing that allows us to add a specified positive k value.
 
+## Sentence Generation (Greedy Search)
+Using `greedy_search()`, we can generate the most probable sentence by doing greedy search on the model. When selecting the next word, the model will choose the word that maximizes the n-gram frequency given the previously added words. Depending on `n`, this can lead to varying different sentences, for example using the including training data:
+```
+n = 2:
+"the company said"
+
+n = 5:
+"the company said the sale is part of a major program to divest several of its businesses representing about 200 mln dlrs in the first quarter of 1987"
+
+n = 10:
+"the company said the sale is subject to review by local authorities"
+```
+
 Example running command:
 ```
 python language_model.py --N 2 --k 0.1

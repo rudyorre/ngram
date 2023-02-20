@@ -124,7 +124,7 @@ class LanguageModel(object):
                     # TODO (Task 2): compute the log probability for n-gram models (n>=2).
                     # For add-k smoothing, we have p(x_j|x_i,...,x_{j-1}) = (cnt((x_i, ..., x_j))+k) / (cnt((x_i, ..., x_{j-1})) + k*|V|) 
                     numer = self.train_ngram_freq[ngram] + self.add_k
-                    denom = self.word_cnt + self.add_k * self.vocab_size
+                    denom = self.train_n_minus_one_gram_freq[ngram[:-1]] + self.add_k * self.vocab_size
                     log_prob += math.log2(numer / denom)
             else:
                 # Case 2: this ngram does not appear in the training data.
@@ -138,7 +138,8 @@ class LanguageModel(object):
                         log_prob += math.log2(self.add_k/(self.add_k*self.vocab_size + n_minus_one_gram_freq) )
                     
         cnt_ngrams = len(sent_ngrams)
-        perplexity = math.e ** (-log_prob / cnt_ngrams)
+        cross_entropy = -log_prob / cnt_ngrams
+        perplexity = 2 ** cross_entropy
         return perplexity, log_prob, cnt_ngrams
 
     def corpus_perplexity(self, corpus):
@@ -160,7 +161,7 @@ class LanguageModel(object):
             corpus_cnt_ngrams += sent_cnt_ngrams
         # TODO (Task 2): compute corpus-level perplexity. The equation should be almost the same to 
         # sentence-level perplexity.
-        perplexity = math.e ** (-corpus_log_prob / corpus_cnt_ngrams)
+        perplexity = 2 ** (-corpus_log_prob / corpus_cnt_ngrams)
         return perplexity
         
     def greedy_search(self, max_steps=50):
@@ -174,7 +175,6 @@ class LanguageModel(object):
         """
         # The sentence first start with the bos token(s).
         words = self.bos.split()
-
         while len(words) < max_steps:
             # At each step, we generate one word based on n-gram frequency.
             next_word = None
@@ -188,7 +188,10 @@ class LanguageModel(object):
                     ngram = tuple(words[-self.N+1:] + [word])
                 # TODO (Task 3): given the n-gram, we retrieve its frequency in the training data.
                 # We update {next_word} and {next_max_freq} under certain conditions.
-                # print(ngram)
+                freq = self.train_ngram_freq[ngram]
+                if next_max_freq is None or freq > next_max_freq:
+                    next_max_freq = freq
+                    next_word = word
             if next_word is None:
                 break
             words.append(next_word) 
